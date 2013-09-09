@@ -14,8 +14,11 @@ There are several previous works such as "rect-mark", "cua-mode",
 etc. The motivation to write this command is as follows:
 
 - cua-mode has many functionalities such as "delete-selection",
-  "shift-region", and "rectangle-mark", and it seems too complex when
+  "shift-region", and "rectangle-mark", but it seems too complex when
   we just want to use "rectangle-mark".
+
+- cua-mode has also "mark-multiple"-like feature as a part of
+  "rectangle-mark". But we'd better use multiple-cursors.
 
 - rect-mark seems simple and clean, but too simple for me. For
   example, to duplicate rectangle we must call following commands:
@@ -30,16 +33,18 @@ etc. The motivation to write this command is as follows:
   2. cua-copy-region [C-w]
   3. cua-paste [C-y]
 
-  cua-mode unifies "copy" and "copy-rectangle", "yank" and
-  "yank-rectangle", etc, and is very handy.
+  cua-mode unifies "copy" and "copy-rectangle", "paste" and
+  "paste-rectangle", etc. Very easy.
 
-- "force" option in rect-mark is not very easy to use, Because we need
-  to delete trailing whitespaces manually.
+- "force" option in rect-mark is somewhat annoying, Because we need to
+  delete trailing whitespaces manually.
 
-"phi-rectangle" is based on rect-mark, but as easy-to-use as cua.
+- rect-mark does not work perfectly with delete-selection-mode.
+
+"phi-rectangle" is based on rect-mark, but as easy-to-use as cua, and
+is also integrated with multiple-cursors.
 
 ** Usage
-
 
 Require this script
 
@@ -69,14 +74,14 @@ available
 
 ** multiple-cursors Integration
 
-When multiple-cursors is installed in your system, phi-rectangle
-behaves as follows:
+When multiple-cursors is installed in your system, phi-rectangle does
+more.
 
-- Convert killed-rectangle and kill-ring for each fake cursors if
-  proper.
+- Convert killed-rectangle and fake cursors' kill-ring if proper.
 
   [[imgs/mc1.gif]]
 
-- Invoke multiple-cursors-mode on delsel.
+- Invoke multiple-cursors-mode on delete-selection-mode to edit
+  multiple lines.
 
   [[imgs/mc2.gif]]

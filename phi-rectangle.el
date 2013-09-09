@@ -90,6 +90,7 @@
 
 ;; + minor-mode
 
+;;;###autoload
 (define-minor-mode phi-rectangle-mode
   "minor mode to set rectangle-mark"
   :init-value nil

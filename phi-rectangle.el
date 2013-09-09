@@ -119,7 +119,10 @@
 
 (defun phi-rectangle--delete-trailing-whitespaces (start end)
   (save-restriction
-    (narrow-to-region start end)
+    (narrow-to-region start
+                      (save-excursion
+                        (goto-char end)
+                        (point-at-eol end)))
     (delete-trailing-whitespace)))
 
 ;; + hook functions
@@ -184,28 +187,28 @@
 
 ;; + kill-ring commands
 
-(defun phi-rectangle-kill-ring-save (start end)
+(defun phi-rectangle-kill-ring-save ()
   "when region is active, copy region as usual. when rectangle-region is
 active, copy rectangle. otherwise, copy whole line."
-  (interactive "r")
+  (interactive)
   (cond (phi-rectangle-mark-active
-         (phi-rectangle--copy-rectangle start end)
-         (phi-rectangle--delete-trailing-whitespaces start end))
+         (phi-rectangle--copy-rectangle (region-beginning) (region-end))
+         (phi-rectangle--delete-trailing-whitespaces (region-beginning) (region-end)))
         ((use-region-p)
-         (kill-ring-save start end))
+         (kill-ring-save (region-beginning) (region-end)))
         (t
          (copy-region-as-kill
           (line-beginning-position)
           (line-beginning-position 2)))))
 
-(defun phi-rectangle-kill-region (start end)
+(defun phi-rectangle-kill-region ()
   "when region is active, kill region as usual. when rectangle-region is
 active, kill rectangle. otherwise, kill whole line."
-  (interactive "r")
+  (interactive)
   (cond (phi-rectangle-mark-active
-         (phi-rectangle--kill-rectangle start end))
+         (phi-rectangle--kill-rectangle (region-beginning) (region-end)))
         ((use-region-p)
-         (kill-region start end))
+         (kill-region (region-beginning) (region-end)))
         (t
          (kill-whole-line))))
 

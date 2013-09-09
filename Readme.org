@@ -67,3 +67,26 @@ available
   A dwim version of "yank". If the last killed object is a rectangle,
   yank rectangle. Otherwise yank a kill-ring item as usual.
 
+** for multiple-cursors users
+
+Following hacks are perhaps useful:
+
+: (defadvice mc--maybe-set-killed-rectangle (around phi-hack activate)
+:   (let ((entries (mc--kill-ring-entries)))
+:     (unless (mc--all-equal entries)
+:       (setq killed-rectangle entries
+:             phi-rectangle--last-killed-is-rectangle t))))
+
+: (defadvice phi-rectangle-yank (before phi-hack activate)
+:   (when (and multiple-cursors-mode
+:              phi-rectangle--last-killed-is-rectangle)
+:     (let* ((n 0))
+:       (mc/for-each-cursor-ordered
+:        (let ((kill-ring (overlay-get cursor 'kill-ring))
+:              (kill-ring-yank-pointer (overlay-get cursor 'kill-ring-yank-pointer)))
+:          (kill-new (or (nth n killed-rectangle) ""))
+:          (overlay-put cursor 'kill-ring kill-ring)
+:          (overlay-put cursor 'kill-ring-yank-pointer kill-ring-yank-pointer)
+:          (setq n (1+ n)))))
+:     (setq phi-rectangle--last-killed-is-rectangle nil)))
+

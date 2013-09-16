@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.0
+;; Version: 1.1.1
 
 ;;; Commentary:
 
@@ -52,11 +52,12 @@
 
 ;; 1.0.0 first released
 ;; 1.1.0 better integration with multiple-cursors
+;; 1.1.1 delete trailing whitespaces on rectangle-yank
 
 ;;; Code:
 
 (require 'rect)
-(defconst phi-rectangle-version "1.1.0")
+(defconst phi-rectangle-version "1.1.1")
 
 ;; + keymaps
 
@@ -121,9 +122,7 @@
 (defun phi-rectangle--delete-trailing-whitespaces (start end)
   (save-restriction
     (narrow-to-region start
-                      (save-excursion
-                        (goto-char end)
-                        (point-at-eol end)))
+                      (save-excursion (goto-char end) (point-at-eol)))
     (delete-trailing-whitespace)))
 
 ;; + hook functions
@@ -217,7 +216,9 @@ active, kill rectangle. otherwise, kill whole line."
   "when rectangle is killed recently, yank rectangle. otherwise yank as usual."
   (interactive)
   (if phi-rectangle--last-killed-is-rectangle
-      (yank-rectangle)
+      (phi-rectangle--delete-trailing-whitespaces
+       (point)
+       (progn (yank-rectangle) (point)))
     (yank)))
 
 (defadvice kill-new (after phi-rectangle-kill-new-ad activate)

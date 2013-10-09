@@ -267,8 +267,7 @@ active, kill rectangle. otherwise, kill whole line."
            (delete-region (point) (mark))))
        t)
 
-     (defadvice delete-selection-pre-hook
-       (around phi-delsel-workaround activate)
+     (defadvice delete-selection-pre-hook (around phi-delsel-workaround activate)
        (let ((old-tmm transient-mark-mode)
              (old-tmm-localp (local-variable-p 'transient-mark-mode)))
          (setq transient-mark-mode (or transient-mark-mode phi-rectangle-mark-active))
@@ -283,10 +282,11 @@ active, kill rectangle. otherwise, kill whole line."
 
 ;; + multiple-cursors integration
 
-(when (require 'multiple-cursors nil t)
+(when (locate-library "multiple-cursors")
 
   (eval-after-load "delsel"
     '(progn
+       (autoload 'phi-rectangle-mc/edit-lines "multiple-cursors")
        (defadvice delete-active-region (around phi-mc activate)
          (let ((lines (- (line-number-at-pos (point))
                          (line-number-at-pos (mark))))
@@ -294,39 +294,41 @@ active, kill rectangle. otherwise, kill whole line."
            ad-do-it
            (when old-rma
              (phi-rectangle-mc/edit-lines lines))))
-       (defun phi-rectangle-mc/edit-lines (lines)
-         (mc/remove-fake-cursors)
-         (deactivate-mark)
-         (let ((direction (if (< lines 0) -1 1))
-               (col (current-column)))
-           (save-excursion
-             (dotimes (_ (abs lines))
-               (forward-line direction)
-               (move-to-column col t)
-               (mc/create-fake-cursor-at-point))))
-         (multiple-cursors-mode 1))
        ))
 
-  (defun mc--maybe-set-killed-rectangle ()
-    (let ((entries (mc--kill-ring-entries)))
-      (unless (mc--all-equal entries)
-        (setq killed-rectangle entries
-              phi-rectangle--last-killed-is-rectangle t))))
-
-  (defadvice phi-rectangle-yank (before phi-mc activate)
-    (when (and multiple-cursors-mode
-               phi-rectangle--last-killed-is-rectangle)
-      (let* ((n 0))
-        (mc/for-each-cursor-ordered
-         (let ((kill-ring (overlay-get cursor 'kill-ring))
-               (kill-ring-yank-pointer (overlay-get cursor 'kill-ring-yank-pointer)))
-           (kill-new (or (replace-regexp-in-string "[\s\t]*$" ""
-                                                   (nth n killed-rectangle))
-                         ""))
-           (overlay-put cursor 'kill-ring kill-ring)
-           (overlay-put cursor 'kill-ring-yank-pointer kill-ring-yank-pointer)
-           (setq n (1+ n)))))
-      (setq phi-rectangle--last-killed-is-rectangle nil)))
+  (eval-after-load "multiple-cursors"
+    '(progn
+       (defun phi-rectangle-mc/edit-lines (lines)
+            (mc/remove-fake-cursors)
+            (deactivate-mark)
+            (let ((direction (if (< lines 0) -1 1))
+                  (col (current-column)))
+              (save-excursion
+                (dotimes (_ (abs lines))
+                  (forward-line direction)
+                  (move-to-column col t)
+                  (mc/create-fake-cursor-at-point))))
+            (multiple-cursors-mode 1))
+       (defun mc--maybe-set-killed-rectangle ()
+         (let ((entries (mc--kill-ring-entries)))
+           (unless (mc--all-equal entries)
+             (setq killed-rectangle entries
+                   phi-rectangle--last-killed-is-rectangle t))))
+       (defadvice phi-rectangle-yank (before phi-mc activate)
+         (when (and multiple-cursors-mode
+                    phi-rectangle--last-killed-is-rectangle)
+           (let* ((n 0))
+             (mc/for-each-cursor-ordered
+              (let ((kill-ring (overlay-get cursor 'kill-ring))
+                    (kill-ring-yank-pointer (overlay-get cursor 'kill-ring-yank-pointer)))
+                (kill-new (or (replace-regexp-in-string "[\s\t]*$" ""
+                                                        (nth n killed-rectangle))
+                              ""))
+                (overlay-put cursor 'kill-ring kill-ring)
+                (overlay-put cursor 'kill-ring-yank-pointer kill-ring-yank-pointer)
+                (setq n (1+ n)))))
+           (setq phi-rectangle--last-killed-is-rectangle nil)))
+       ))
   )
 
 ;; + provide

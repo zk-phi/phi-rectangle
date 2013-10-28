@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.1
+;; Version: 1.1.2
 
 ;;; Commentary:
 
@@ -53,11 +53,12 @@
 ;; 1.0.0 first released
 ;; 1.1.0 better integration with multiple-cursors
 ;; 1.1.1 delete trailing whitespaces on rectangle-yank
+;; 1.1.2 handle texts copied from other programs
 
 ;;; Code:
 
 (require 'rect)
-(defconst phi-rectangle-version "1.1.1")
+(defconst phi-rectangle-version "1.1.2")
 
 ;; + keymaps
 
@@ -215,6 +216,16 @@ active, kill rectangle. otherwise, kill whole line."
 (defun phi-rectangle-yank ()
   "when rectangle is killed recently, yank rectangle. otherwise yank as usual."
   (interactive)
+  ;; handle texts copied from other programs (copied from current-kill)
+  (let ((interprogram-cut-function nil)
+        (interprogram-paste (and interprogram-paste-function
+                                 (funcall interprogram-paste-function))))
+    (when interprogram-paste
+      (if (listp interprogram-paste)
+          (mapc 'kill-new (nreverse interprogram-paste))
+        (kill-new interprogram-paste))
+      (setq phi-rectangle--last-killed-is-rectangle nil)))
+  ;; body
   (if phi-rectangle--last-killed-is-rectangle
       (phi-rectangle--delete-trailing-whitespaces
        (point)

@@ -126,6 +126,18 @@
                       (save-excursion (goto-char end) (point-at-eol)))
     (delete-trailing-whitespace)))
 
+(defun phi-recntalge--handle-interprogram-paste ()
+  "handle texts copied from other programs"
+  ;; copied from current-kill
+  (let ((interprogram-cut-function nil)
+        (interprogram-paste (and interprogram-paste-function
+                                 (funcall interprogram-paste-function))))
+    (when interprogram-paste
+      (if (listp interprogram-paste)
+          (mapc 'kill-new (nreverse interprogram-paste))
+        (kill-new interprogram-paste))
+      (setq phi-rectangle--last-killed-is-rectangle nil))))
+
 ;; + hook functions
 
 (defun phi-rectangle--post-command ()
@@ -192,6 +204,7 @@
   "when region is active, copy region as usual. when rectangle-region is
 active, copy rectangle. otherwise, copy whole line."
   (interactive)
+  (phi-recntalge--handle-interprogram-paste)
   (cond (phi-rectangle-mark-active
          (phi-rectangle--copy-rectangle (region-beginning) (region-end))
          (phi-rectangle--delete-trailing-whitespaces (region-beginning) (region-end)))
@@ -206,6 +219,7 @@ active, copy rectangle. otherwise, copy whole line."
   "when region is active, kill region as usual. when rectangle-region is
 active, kill rectangle. otherwise, kill whole line."
   (interactive)
+  (phi-recntalge--handle-interprogram-paste)
   (cond (phi-rectangle-mark-active
          (phi-rectangle--kill-rectangle (region-beginning) (region-end)))
         ((use-region-p)
@@ -216,16 +230,7 @@ active, kill rectangle. otherwise, kill whole line."
 (defun phi-rectangle-yank ()
   "when rectangle is killed recently, yank rectangle. otherwise yank as usual."
   (interactive)
-  ;; handle texts copied from other programs (copied from current-kill)
-  (let ((interprogram-cut-function nil)
-        (interprogram-paste (and interprogram-paste-function
-                                 (funcall interprogram-paste-function))))
-    (when interprogram-paste
-      (if (listp interprogram-paste)
-          (mapc 'kill-new (nreverse interprogram-paste))
-        (kill-new interprogram-paste))
-      (setq phi-rectangle--last-killed-is-rectangle nil)))
-  ;; body
+  (phi-recntalge--handle-interprogram-paste)
   (if phi-rectangle--last-killed-is-rectangle
       (phi-rectangle--delete-trailing-whitespaces
        (point)

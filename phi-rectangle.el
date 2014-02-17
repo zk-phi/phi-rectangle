@@ -350,3 +350,5 @@ active, kill rectangle. otherwise, kill whole line."
 ;; + provide
 
 (provide 'phi-rectangle)
+
+;;; phi-rectangle.el ends here

@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.2
+;; Version: 1.1.3
 
 ;;; Commentary:
 
@@ -54,11 +54,22 @@
 ;; 1.1.0 better integration with multiple-cursors
 ;; 1.1.1 delete trailing whitespaces on rectangle-yank
 ;; 1.1.2 handle texts copied from other programs
+;; 1.1.3 add new option phi-rectangle-collect-fake-cursors-kill-rings
+;;       phi-rectangle-yank now accepts a prefix argument
 
 ;;; Code:
 
 (require 'rect)
-(defconst phi-rectangle-version "1.1.2")
+(defconst phi-rectangle-version "1.1.3")
+
+;; + customizable vars
+
+(defvar phi-rectangle-collect-fake-cursors-kill-rings 'rectangle
+  "how phi-rectangle should collect fake cursors' kill-rings when
+  multiple-cursors-mode is turned off. when nil, fake cursors'
+  kill-rings are ignored. when 'rectangle, kill-rings are
+  collected as a rectangle. when any other non-nil value,
+  kill-rings are collected as a multi-line string.")
 
 ;; + keymaps
 
@@ -227,15 +238,16 @@ active, kill rectangle. otherwise, kill whole line."
         (t
          (kill-whole-line))))
 
-(defun phi-rectangle-yank ()
+(defun phi-rectangle-yank (n)
   "when rectangle is killed recently, yank rectangle. otherwise yank as usual."
-  (interactive)
+  (interactive "p")
   (phi-recntalge--handle-interprogram-paste)
-  (if phi-rectangle--last-killed-is-rectangle
+  (if (and (= n 1)
+           phi-rectangle--last-killed-is-rectangle)
       (phi-rectangle--delete-trailing-whitespaces
        (point)
        (progn (yank-rectangle) (point)))
-    (yank)))
+    (yank (- n (if phi-rectangle--last-killed-is-rectangle 1 0)))))
 
 (defadvice kill-new (after phi-rectangle-kill-new-ad activate)
   (setq phi-rectangle--last-killed-is-rectangle nil))
@@ -314,22 +326,28 @@ active, kill rectangle. otherwise, kill whole line."
 
   (eval-after-load "multiple-cursors"
     '(progn
+
        (defun phi-rectangle-mc/edit-lines (lines)
-            (mc/remove-fake-cursors)
-            (deactivate-mark)
-            (let ((direction (if (< lines 0) -1 1))
-                  (col (current-column)))
-              (save-excursion
-                (dotimes (_ (abs lines))
-                  (forward-line direction)
-                  (move-to-column col t)
-                  (mc/create-fake-cursor-at-point))))
-            (multiple-cursors-mode 1))
+         (mc/remove-fake-cursors)
+         (deactivate-mark)
+         (let ((direction (if (< lines 0) -1 1))
+               (col (current-column)))
+           (save-excursion
+             (dotimes (_ (abs lines))
+               (forward-line direction)
+               (move-to-column col t)
+               (mc/create-fake-cursor-at-point))))
+         (multiple-cursors-mode 1))
+
        (defun mc--maybe-set-killed-rectangle ()
          (let ((entries (mc--kill-ring-entries)))
            (unless (mc--all-equal entries)
-             (setq killed-rectangle entries
-                   phi-rectangle--last-killed-is-rectangle t))))
+             (when phi-rectangle-collect-fake-cursors-kill-rings
+               (if (eq phi-rectangle-collect-fake-cursors-kill-rings 'rectangle)
+                   (setq killed-rectangle entries
+                         phi-rectangle--last-killed-is-rectangle t)
+                 (kill-new (mapconcat 'identity entries "\n")))))))
+
        (defadvice phi-rectangle-yank (before phi-mc activate)
          (when (and multiple-cursors-mode
                     phi-rectangle--last-killed-is-rectangle)

@@ -238,16 +238,25 @@ active, kill rectangle. otherwise, kill whole line."
         (t
          (kill-whole-line))))
 
-(defun phi-rectangle-yank (n)
+(defun phi-rectangle-yank (&optional arg)
   "when rectangle is killed recently, yank rectangle. otherwise yank as usual."
-  (interactive "p")
+  (interactive "*P")
   (phi-recntalge--handle-interprogram-paste)
-  (if (and (= n 1)
-           phi-rectangle--last-killed-is-rectangle)
-      (phi-rectangle--delete-trailing-whitespaces
-       (point)
-       (progn (yank-rectangle) (point)))
-    (yank (- n (if phi-rectangle--last-killed-is-rectangle 1 0)))))
+  (setq arg (or arg 1))
+  (cond ((not phi-rectangle--last-killed-is-rectangle)
+         (yank arg))
+        ((consp arg)
+         (let ((pos (point)))
+           (yank-rectangle)
+           (push-mark)
+           (goto-char pos))
+         (phi-rectangle--delete-trailing-whitespaces (point) (mark)))
+        ((= arg 1)
+         (push-mark)
+         (yank-rectangle)
+         (phi-rectangle--delete-trailing-whitespaces (mark) (point)))
+        (t
+         (yank (- arg 1)))))
 
 (defadvice kill-new (after phi-rectangle-kill-new-ad activate)
   (setq phi-rectangle--last-killed-is-rectangle nil))

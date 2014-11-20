@@ -74,20 +74,20 @@
 ;; + keymaps
 
 (defvar phi-rectangle-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-<return>") 'phi-rectangle-set-mark-command)
-    (define-key map [remap kill-region] 'phi-rectangle-kill-region)
-    (define-key map [remap kill-ring-save] 'phi-rectangle-kill-ring-save)
-    (define-key map [remap yank] 'phi-rectangle-yank)
-    map))
+  (let ((kmap (make-sparse-keymap)))
+    (define-key kmap (kbd "C-<return>") 'phi-rectangle-set-mark-command)
+    (define-key kmap [remap kill-region] 'phi-rectangle-kill-region)
+    (define-key kmap [remap kill-ring-save] 'phi-rectangle-kill-ring-save)
+    (define-key kmap [remap yank] 'phi-rectangle-yank)
+    kmap))
 
 (defvar phi-rectangle-mark-active-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap forward-char] 'phi-rectangle-forward-char)
-    (define-key map [remap previous-line] 'phi-rectangle-previous-line)
-    (define-key map [remap next-line] 'phi-rectangle-next-line)
-    (define-key map [remap keyboard-quit] 'phi-rectangle-keyboard-quit)
-    map))
+  (let ((kmap (make-sparse-keymap)))
+    (define-key kmap [remap forward-char] 'phi-rectangle-forward-char)
+    (define-key kmap [remap previous-line] 'phi-rectangle-previous-line)
+    (define-key kmap [remap next-line] 'phi-rectangle-next-line)
+    (define-key kmap [remap keyboard-quit] 'phi-rectangle-keyboard-quit)
+    kmap))
 
 ;; + internal variables
 

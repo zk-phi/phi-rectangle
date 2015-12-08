@@ -1,6 +1,6 @@
 ;;; phi-rectangle.el --- another rectangle-mark command (rewrite of rect-mark)
 
-;; Copyright (C) 2013 zk_phi
+;; Copyright (C) 2013-2015 zk_phi
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -137,7 +137,7 @@
                       (save-excursion (goto-char end) (point-at-eol)))
     (delete-trailing-whitespace)))
 
-(defun phi-recntalge--handle-interprogram-paste ()
+(defun phi-rectangle--handle-interprogram-paste ()
   "handle texts copied from other programs"
   ;; copied from current-kill
   (let ((interprogram-cut-function nil)
@@ -215,7 +215,7 @@
   "when region is active, copy region as usual. when rectangle-region is
 active, copy rectangle. otherwise, copy whole line."
   (interactive)
-  (phi-recntalge--handle-interprogram-paste)
+  (phi-rectangle--handle-interprogram-paste)
   (cond (phi-rectangle-mark-active
          (phi-rectangle--copy-rectangle (region-beginning) (region-end))
          (phi-rectangle--delete-trailing-whitespaces (region-beginning) (region-end)))
@@ -230,7 +230,7 @@ active, copy rectangle. otherwise, copy whole line."
   "when region is active, kill region as usual. when rectangle-region is
 active, kill rectangle. otherwise, kill whole line."
   (interactive)
-  (phi-recntalge--handle-interprogram-paste)
+  (phi-rectangle--handle-interprogram-paste)
   (cond (phi-rectangle-mark-active
          (phi-rectangle--kill-rectangle (region-beginning) (region-end)))
         ((use-region-p)
@@ -241,7 +241,7 @@ active, kill rectangle. otherwise, kill whole line."
 (defun phi-rectangle-yank (&optional arg)
   "when rectangle is killed recently, yank rectangle. otherwise yank as usual."
   (interactive "*P")
-  (phi-recntalge--handle-interprogram-paste)
+  (phi-rectangle--handle-interprogram-paste)
   (setq arg (or arg 1))
   (cond ((not phi-rectangle--last-killed-is-rectangle)
          (yank arg))

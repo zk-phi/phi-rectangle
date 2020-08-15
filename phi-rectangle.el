@@ -18,7 +18,7 @@
 
 ;; Author: zk_phi
 ;; URL: http://hins11.yu-yake.com/
-;; Version: 1.1.3
+;; Version: 1.1.4
 
 ;;; Commentary:
 
@@ -56,11 +56,12 @@
 ;; 1.1.2 handle texts copied from other programs
 ;; 1.1.3 add new option phi-rectangle-collect-fake-cursors-kill-rings
 ;;       phi-rectangle-yank now accepts a prefix argument
+;; 1.1.4 migrate to nadvice.el
 
 ;;; Code:
 
 (require 'rect)
-(defconst phi-rectangle-version "1.1.3")
+(defconst phi-rectangle-version "1.1.4")
 
 ;; + customizable vars
 

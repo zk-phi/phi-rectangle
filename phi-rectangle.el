@@ -258,7 +258,7 @@ active, kill rectangle. otherwise, kill whole line."
         (t
          (yank (- arg 1)))))
 
-(defadvice kill-new (after phi-rectangle-kill-new-ad activate)
+(define-advice kill-new (:after (&rest _) phi-rectangle-kill-new-ad)
   (setq phi-rectangle--last-killed-is-rectangle nil))
 
 ;; + activate/deactivate mark
@@ -304,11 +304,11 @@ active, kill rectangle. otherwise, kill whole line."
            (delete-region (point) (mark))))
        t)
 
-     (defadvice delete-selection-pre-hook (around phi-delsel-workaround activate)
+     (define-advice delete-selection-pre-hook (:around (fn &rest args) phi-delsel-workaround)
        (let ((old-tmm transient-mark-mode)
              (old-tmm-localp (local-variable-p 'transient-mark-mode)))
          (setq transient-mark-mode (or transient-mark-mode phi-rectangle-mark-active))
-         ad-do-it
+         (apply fn args)
          (unless (and old-tmm-localp
                       (not (local-variable-p 'transient-mark-mode)))
            (setq transient-mark-mode old-tmm))))
@@ -324,11 +324,11 @@ active, kill rectangle. otherwise, kill whole line."
   (eval-after-load "delsel"
     '(progn
        (autoload 'phi-rectangle-mc/edit-lines "multiple-cursors")
-       (defadvice delete-active-region (around phi-mc activate)
+       (define-advice delete-active-region (:around (fn &rest args) phi-mc)
          (let ((lines (- (line-number-at-pos (point))
                          (line-number-at-pos (mark))))
                (old-rma phi-rectangle-mark-active))
-           ad-do-it
+           (apply fn args)
            (when old-rma
              (phi-rectangle-mc/edit-lines lines))))
        ))
@@ -348,7 +348,7 @@ active, kill rectangle. otherwise, kill whole line."
                (mc/create-fake-cursor-at-point))))
          (multiple-cursors-mode 1))
 
-       (defun mc--maybe-set-killed-rectangle ()
+       (define-advice mc--maybe-set-killed-rectangle (:override () phi-mc)
          (let ((entries (mc--kill-ring-entries)))
            (unless (mc--all-equal entries)
              (when phi-rectangle-collect-fake-cursors-kill-rings
@@ -357,7 +357,7 @@ active, kill rectangle. otherwise, kill whole line."
                          phi-rectangle--last-killed-is-rectangle t)
                  (kill-new (mapconcat 'identity entries "\n")))))))
 
-       (defadvice phi-rectangle-yank (before phi-mc activate)
+       (define-advice phi-rectangle-yank (:before (&rest _) phi-mc)
          (when (and multiple-cursors-mode
                     phi-rectangle--last-killed-is-rectangle)
            (let* ((n 0))

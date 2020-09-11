@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t -*-
 ;;; phi-rectangle.el --- another rectangle-mark command (rewrite of rect-mark)
 
 ;; Copyright (C) 2013-2015 zk_phi
@@ -279,7 +280,7 @@ active, kill rectangle. otherwise, kill whole line."
     (add-hook 'deactivate-mark-hook 'phi-rectangle-deactivate-mark nil t))
   (push-mark nil nil t))
 
-(defun phi-rectangle-deactivate-mark (&optional dont-clean)
+(defun phi-rectangle-deactivate-mark ()
   (mapc 'delete-overlay phi-rectangle--overlays)
   (setq phi-rectangle--overlays nil
         phi-rectangle-mark-active nil)
